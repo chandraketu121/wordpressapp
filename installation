@@ -1,0 +1,127 @@
+To install and deploy WordPress on Ubuntu with Nginx, follow these steps:
+
+1. **Connect to your server:**
+
+   ```bash
+   ssh mohit@4.240.106.196
+   ```
+
+2. **Update the package list:**
+
+   ```bash
+  # sudo apt update
+   ```
+
+3. **Install necessary packages:**
+
+   ```bash
+#sudo apt install nginx mysql-server php-fpm php-mysql
+   ```
+
+4. **Download and configure WordPress:**
+
+   ```bash
+   cd /var/www
+   sudo wget https://wordpress.org/latest.tar.gz
+   sudo tar -xzf latest.tar.gz
+   sudo mv wordpress /var/www/html
+   sudo chown -R www-data:www-data /var/www/html/wordpress
+   sudo chmod -R 755 /var/www/html/wordpress
+   ```
+
+5. **Configure Nginx:**
+
+   Create a new Nginx configuration file for WordPress:
+
+   ```bash
+   #sudo nano /etc/nginx/sites-available/wordpress
+   ```
+
+   Add the following configuration:
+
+   ```nginx
+   server {
+       listen 80;
+       server_name 4.240.106.196;
+
+       root /var/www/html/wordpress;
+       index index.php index.html index.htm;
+
+       location / {
+           try_files $uri $uri/ /index.php?$args;
+       }
+
+       location ~ \.php$ {
+           include snippets/fastcgi-php.conf;
+           fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+       }
+
+       location ~ /\.ht {
+           deny all;
+       }
+   }
+   ```
+
+   Enable the configuration by creating a symbolic link:
+
+   ```bash
+  # sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/
+   ```
+
+   Test the Nginx configuration:
+
+   ```bash
+  # sudo nginx -t
+   ```
+
+   Reload Nginx:
+
+   ```bash
+  # sudo systemctl reload nginx
+   ```
+
+6. **Create a MySQL database for WordPress:**
+
+   ```bash
+   #sudo mysql -u root -p
+   ```
+
+   Enter the MySQL root password (if prompted, you can set it up if not done previously). Then run the following commands:
+
+   ```sql
+   CREATE DATABASE wordpress;
+   CREATE USER 'wordpressuser'@'localhost' IDENTIFIED BY 'password';
+   GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpressuser'@'localhost';
+   FLUSH PRIVILEGES;
+   EXIT;
+   ```
+
+7. **Configure WordPress:**
+
+   Copy the sample configuration file:
+
+   ```bash
+  # cd /var/www/html/wordpress
+  # sudo cp wp-config-sample.php wp-config.php
+   ```
+
+   Edit the WordPress configuration file:
+
+   ```bash
+   # sudo nano wp-config.php
+   ```
+
+   Update the database settings to match the database and user you created:
+
+   ```php
+   // ** MySQL settings ** //
+   define( 'DB_NAME', 'wordpress' );
+   define( 'DB_USER', 'wordpressuser' );
+   define( 'DB_PASSWORD', 'password' );
+   define( 'DB_HOST', 'localhost' );
+   ```
+
+8. **Complete the WordPress Installation:**
+
+   Open your browser and navigate to `http://4.240.106.196`. You should see the WordPress setup page. Follow the on-screen instructions to complete the installation.
+
